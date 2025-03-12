@@ -1,0 +1,67 @@
+{
+  "designName": "12S14P 800KV Quadcopter Motor",
+  "description": "A medium-sized outrunner BLDC motor for 5-inch quadcopter propellers",
+  "dateCreated": "2025-03-12",
+  "version": "1.0.0",
+  "designParameters": {
+    "wireThickness": 0.8,
+    "wireGauge": "AWG 20",
+    "magnetWidth": 10.0,
+    "magnetHeight": 15.0,
+    "magnetThickness": 3.0,
+    "minDiameter": 28.0,
+    "maxDiameter": 35.0,
+    "targetKV": 800
+  },
+  "calculatedResults": {
+    "motorDiameter": 32.0,
+    "rotorDiameter": 32.0,
+    "rotorInnerDiameter": 24.0,
+    "statorOuterDiameter": 22.4,
+    "statorInnerDiameter": 11.2,
+    "airgap": 0.8,
+    "slotCount": 12,
+    "poleCount": 14,
+    "windingType": "distributed",
+    "lcm": 84,
+    "coggingFactor": 7,
+    "turnsPerCoil": 13,
+    "maxTurnsPerCoil": 18,
+    "wireDiameter": 0.8,
+    "magnetWidth": 5.4,
+    "magnetHeight": 15.0,
+    "magnetThickness": 3.0,
+    "magnetArcLength": 5.4,
+    "magnetGap": 0.6,
+    "estimatedKV": 819.7,
+    "targetKV": 800,
+    "kvDeviation": 2.46,
+    "efficiency": 0.89,
+    "phaseResistance": 0.052,
+    "estimatedWeight": 48.3
+  },
+  "performance": {
+    "maxContinuousPower": 350,
+    "peakPower": 580,
+    "maxContinuousTorque": 0.42,
+    "maxContinuousCurrent": 28,
+    "magneticFluxDensity": 1.2,
+    "operatingTemperature": {
+      "min": 10,
+      "max": 85
+    }
+  },
+  "materials": {
+    "magnets": "N42 Neodymium",
+    "wire": "Copper",
+    "insulation": "Class H (180°C)",
+    "statorMaterial": "Silicon Steel M19",
+    "rotorMaterial": "Aluminum 6061"
+  },
+  "applications": [
+    "Quadcopters",
+    "Small Drones",
+    "RC Aircraft"
+  ],
+  "notes": "This design provides a good balance of efficiency and power density for 5-inch quadcopter propellers. The 12S14P configuration offers low cogging torque and smooth operation."
+}

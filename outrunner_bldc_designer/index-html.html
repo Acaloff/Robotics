@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outrunner BLDC Motor Designer</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .visualization {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        #motor-svg {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        #results-container {
+            margin-top: 20px;
+        }
+
+        .parameter-group {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .parameter-group h3 {
+            margin-top: 0;
+        }
+
+        .parameter {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .parameter-name {
+            font-weight: 500;
+        }
+
+        .parameter-value {
+            font-weight: 700;
+        }
+
+        .efficiency-meter {
+            height: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .efficiency-value {
+            height: 100%;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        
+        .tab-button.active {
+            border-bottom: 3px solid var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        #export-btn {
+            background-color: var(--secondary-color);
+            margin-top: 10px;
+        }
+        
+        #export-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .alert {
+            background-color: #fcf8e3;
+            border: 1px solid #faebcc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #8a6d3b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <h1>Outrunner BLDC Designer</h1>
+            
+            <form id="design-form">
+                <div class="form-group">
+                    <label for="wire-gauge">Wire Thickness</label>
+                    <select id="wire-gauge">
+                        <option value="0.2">0.2mm (AWG 32)</option>
+                        <option value="0.3">0.3mm (AWG 28)</option>
+                        <option value="0.5">0.5mm (AWG 24)</option>
+                        <option value="0.8">0.8mm (AWG 20)</option>
+                        <option value="1.0">1.0mm (AWG 18)</option>
+                        <option value="1.3">1.3mm (AWG 16)</option>
+                        <option value="1.6">1.6mm (AWG 14)</option>
+                        <option value="2.0">2.0mm (AWG 12)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="magnet-width">Magnet Width (mm)</label>
+                    <input type="number" id="magnet-width" min="1" max="50" value="10">
+                </div>
+                
+                <div class="form-group">
+                    <label for="magnet-height">Magnet Height (mm)</label>
+                    <input type="number" id="magnet-height" min="1" max="50" value="20">
+                </div>
+                
+                <div class="form-group">
+                    <label for="magnet-thickness">Magnet Thickness (mm)</label>
+                    <input type="number" id="magnet-thickness" min="1" max="20" value="5">
+                </div>
+                
+                <div class="form-group">
+                    <label for="min-diameter">Minimum Motor Diameter (mm)</label>
+                    <input type="number" id="min-diameter" min="20" max="300" value="50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="max-diameter">Maximum Motor Diameter (mm)</label>
+                    <input type="number" id="max-diameter" min="20" max="300" value="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="motor-kv">Target KV (RPM/V)</label>
+                    <input type="number" id="motor-kv" min="100" max="3000" value="800">
+                </div>
+                
+                <button type="button" id="calculate-btn">Calculate Design</button>
+            </form>
+            
+            <div id="results-container"></div>
+        </div>
+        
+        <div class="panel visualization">
+            <h2>Motor Visualization</h2>
+            <div id="motor-svg-container">
+                <svg id="motor-svg" viewBox="0 0 400 400">
+                    <g id="motor-layout">
+                        <circle cx="200" cy="200" r="150" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+                        <text x="200" y="200" text-anchor="middle" dominant-baseline="middle" font-size="16">
+                            Enter parameters and click Calculate
+                        </text>
+                    </g>
+                </svg>
+            </div>
+            
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="visualization">Visualization</button>
+                    <button class="tab-button" data-tab="magnetic-flux">Magnetic Flux</button>
+                    <button class="tab-button" data-tab="advanced">Advanced</button>
+                </div>
+                
+                <div id="visualization-tab" class="tab-content active">
+                    <button id="export-btn">Export SVG</button>
+                </div>
+                
+                <div id="magnetic-flux-tab" class="tab-content">
+                    <h3>Magnetic Flux Distribution</h3>
+                    <p>This view shows the estimated magnetic flux distribution.</p>
+                    <div id="flux-visualization"></div>
+                </div>
+                
+                <div id="advanced-tab" class="tab-content">
+                    <h3>Advanced Parameters</h3>
+                    <div id="advanced-parameters"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Motor Calculator - Contains the core logic for calculating motor parameters
+        class MotorCalculator {
+            constructor() {
+                // Constants
+                this.COPPER_RESISTIVITY = 1.68e-8; // Ohm·m at 20°C
+                this.COPPER_DENSITY = 8960; // kg/m³
+                this.SLOTS_POLES_COMBINATIONS = [
+                    { slots: 12, poles: 14 },
+                    { slots: 9, poles: 12 },
+                    { slots: 9, poles: 10 },
+                    { slots: 9, poles: 8 },
+                    { slots: 6, poles: 8 },
+                    { slots: 18, poles: 16 },
+                    { slots: 18, poles: 20 },
+                    { slots: 24, poles: 22 }
+                ];
+            }
+
+            // Calculate wire properties
+            calculateWireProperties(wireDiameter) {
+                const wireArea = Math.PI * Math.pow(wireDiameter / 2, 2);
+                const currentCapacity = wireArea * 6e6; // Approx 6 A/mm²
+                
+                return {
+                    diameter: wireDiameter,
+                    area: wireArea,
+                    currentCapacity: currentCapacity,
+                    resistancePerMeter: this.COPPER_RESISTIVITY / wireArea
+                };
+            }
+
+            // Calculate number of coils and magnets
+            calculateConfiguration(minDiameter, maxDiameter) {
+                // Find appropriate slot/pole combination for the diameter range
+                let suitableConfigs = [];
+                
+                for (const config of this.SLOTS_POLES_COMBINATIONS) {
+                    // Calculate approximate stator diameter based on poles
+                    const approxDiameter = config.poles * 7; // Rough estimate
+                    
+                    if (approxDiameter >= minDiameter && approxDiameter <= maxDiameter) {
+                        suitableConfigs.push({
+                            ...config,
+                            score: 1 - Math.abs((minDiameter + maxDiameter)/2 - approxDiameter)/(maxDiameter - minDiameter)
+                        });
+                    }
+                }
+                
+                // Sort by score and pick the best one
+                suitableConfigs.sort((a, b) => b.score - a.score);
+                
+                if (suitableConfigs.length === 0) {
+                    return this.SLOTS_POLES_COMBINATIONS[3]; // Default to a common configuration
+                }
+                
+                return suitableConfigs[0];
+            }
+
+            // Calculate coil dimensions
+            calculateCoilDimensions(motorDiameter, slotCount, wireDiameter, magnetHeight) {
+                const statorInnerDiameter = motorDiameter * 0.7;
+                const statorOuterDiameter = motorDiameter * 0.9;
+                const slotWidth = (Math.PI * statorInnerDiameter) / slotCount * 0.7; // 70% of available arc
+                
+                // Calculate max turns per coil based on available space
+                const slotArea = (statorOuterDiameter - statorInnerDiameter)/2 * slotWidth;
+                const wireArea = Math.PI * Math.pow(wireDiameter / 2, 2);
+                const packingFactor = 0.7; // Typical value for hand-wound coils
+                const maxTurnsPerCoil = Math.floor(slotArea * packingFactor / wireArea);
+                
+                // Calculate turns per coil based on KV target
+                const targetTurns = Math.min(maxTurnsPerCoil, 20); // Simplification
+                
+                return {
+                    statorInnerDiameter,
+                    statorOuterDiameter,
+                    slotWidth,
+                    turnsPerCoil: targetTurns,
+                    maxTurnsPerCoil
+                };
+            }
+
+            // Main calculation function
+            calculateMotorDesign(params) {
+                const wireProps = this.calculateWireProperties(params.wireThickness);
+                const config = this.calculateConfiguration(params.minDiameter, params.maxDiameter);
+                
+                // Determine optimal motor diameter within the range
+                const optimalDiameter = (params.minDiameter + params.maxDiameter) / 2;
+                
+                const coilDims = this.calculateCoilDimensions(
+                    optimalDiameter, 
+                    config.slots, 
+                    params.wireThickness, 
+                    params.magnetHeight
+                );
+                
+                // Calculate magnet parameters
+                const rotorDiameter = optimalDiameter;
+                const rotorInnerDiameter = rotorDiameter * 0.75;
+                
+                // Arc length per magnet
+                const magnetArcAngle = 360 / config.poles;
+                const magnetArc = (Math.PI * rotorDiameter * magnetArcAngle) / 360;
+                
+                // Calculate effective magnet width (arc length at average radius)
+                const magnetEffectiveWidth = Math.min(params.magnetWidth, magnetArc * 0.9);
+                
+                // Calculate airgap
+                const airgap = 0.5 + rotorDiameter / 200; // Larger motors need larger airgaps
+                
+                // Calculate efficiency (simplified model)
+                const efficiency = 0.85 + (config.poles / 30) * 0.1; // Simplified estimate
+                
+                return {
+                    motorDiameter: optimalDiameter,
+                    rotorDiameter,
+                    rotorInnerDiameter,
+                    statorInnerDiameter: coilDims.statorInnerDiameter,
+                    statorOuterDiameter: coilDims.statorOuterDiameter,
+                    airgap,
+                    slotCount: config.slots,
+                    poleCount: config.poles,
+                    turnsPerCoil: coilDims.turnsPerCoil,
+                    maxTurnsPerCoil: coilDims.maxTurnsPerCoil,
+                    wireDiameter: params.wireThickness,
+                    magnetWidth: magnetEffectiveWidth,
+                    magnetHeight: params.magnetHeight,
+                    magnetThickness: params.magnetThickness,
+                    efficiency: efficiency,
+                    estimatedKV: 1000 / (coilDims.turnsPerCoil * config.slots/3 * config.poles/2 * 0.001)
+                };
+            }
+        }
+
+        // Motor Visualizer - Handles the 2D visualization of the motor design
+        class MotorVisualizer {
+            constructor(svgElement) {
+                this.svg = svgElement;
+                this.mainGroup = document.getElementById('motor-layout');
+            }
+            
+            clearVisualization() {
+                while (this.mainGroup.firstChild) {
+                    this.mainGroup.removeChild(this.mainGroup.firstChild);
+                }
+            }
+            
+            drawMotor(motorDesign) {
+                this.clearVisualization();
+                
+                const center = { x: 200, y: 200 };
+                const scale = 350 / motorDesign.motorDiameter;
+                
+                // Draw stator (inner part for outrunner)
+                this.drawStator(center, motorDesign, scale);
+                
+                // Draw rotor (outer part for outrunner)
+                this.drawRotor(center, motorDesign, scale);
+                
+                // Draw coils
+                this.drawCoils(center, motorDesign, scale);
+                
+                // Draw magnets
+                this.drawMagnets(center, motorDesign, scale);
+                
+                // Draw center shaft
+                this.drawCircle(center.x, center.y, 10, "#555");
+                
+                // Draw labels
+                this.drawLabels(center, motorDesign, scale);
+            }
+            
+            drawStator(center, design, scale) {
+                // Draw stator core
+                this.drawCircle(
+                    center.x, 
+                    center.y, 
+                    design.statorOuterDiameter/2 * scale, 
+                    "#c0c0c0", 
+                    "#888", 
+                    1
+                );
+            }
+            
+            drawRotor(center, design, scale) {
+                // Draw outer rotor housing
+                this.drawCircle(
+                    center.x, 
+                    center.y, 
+                    design.rotorDiameter/2 * scale, 
+                    "none", 
+                    "#555", 
+                    2
+                );
+                
+                // Draw inner rotor boundary (where magnets attach)
+                this.drawCircle(
+                    center.x, 
+                    center.y, 
+                    design.rotorInnerDiameter/2 * scale, 
+                    "none", 
+                    "#777", 
+                    1
+                );
+            }
+            
+            drawCoils(center, design, scale) {
+                const slotCount = design.slotCount;
+                const statorOuterRadius = design.statorOuterDiameter/2 * scale;
+                const statorInnerRadius = design.statorInnerDiameter/2 * scale;
+                
+                for (let i = 0; i < slotCount; i++) {
+                    const angle = (i * 360 / slotCount) * Math.PI / 180;
+                    const nextAngle = ((i+1) * 360 / slotCount - 2) * Math.PI / 180;
+                    
+                    // Determine color based on phase (3-phase motor)
+                    let coilColor;
+                    switch (i % 3) {
+                        case 0: coilColor = "#8b5d33"; break; // Brown for phase A
+                        case 1: coilColor = "#3d85c6"; break; // Blue for phase B
+                        case 2: coilColor = "#6aa84f"; break; // Green for phase C
+                    }
+                    
+                    // Create path for coil
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    
+                    const x1 = center.x + statorInnerRadius * Math.cos(angle);
+                    const y1 = center.y + statorInnerRadius * Math.sin(angle);
+                    const x2 = center.x + statorOuterRadius * Math.cos(angle);
+                    const y2 = center.y + statorOuterRadius * Math.sin(angle);
+                    const x3 = center.x + statorOuterRadius * Math.cos(nextAngle);
+                    const y3 = center.y + statorOuterRadius * Math.sin(nextAngle);
+                    const x4 = center.x + statorInnerRadius * Math.cos(nextAngle);
+                    const y4 = center.y + statorInnerRadius * Math.sin(nextAngle);
+                    
+                    path.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} L ${x4} ${y4} Z`);
+                    path.setAttribute("fill", coilColor);
+                    path.setAttribute("stroke", "#333");
+                    path.setAttribute("stroke-width", "0.5");
+                    path.setAttribute("data-slot", i);
+                    
+                    this.mainGroup.appendChild(path);
+                }
+            }
+            
+            drawMagnets(center, design, scale) {
+                const poleCount = design.poleCount;
+                const rotorInnerRadius = design.rotorInnerDiameter/2 * scale;
+                const magnetThickness = design.magnetThickness * scale;
+                
+                for (let i = 0; i < poleCount; i++) {
+                    const angle = (i * 360 / poleCount) * Math.PI / 180;
+                    const arcAngle = 360 / poleCount * 0.8; // 80% of available arc
+                    const halfArcAngle = arcAngle / 2 * Math.PI / 180;
+                    
+                    // Alternate N/S poles
+                    const magnetColor = i % 2 === 0 ? "#ff5252" : "#4285f4";
+                    
+                    // Create path for magnet
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    
+                    // Calculate the four corners of the magnet
+                    const innerRadius = rotorInnerRadius;
+                    const outerRadius = innerRadius + magnetThickness;
+                    
+                    const startAngle = angle - halfArcAngle;
+                    const endAngle = angle + halfArcAngle;
+                    
+                    const x1 = center.x + innerRadius * Math.cos(startAngle);
+                    const y1 = center.y + innerRadius * Math.sin(startAngle);
+                    const x2 = center.x + outerRadius * Math.cos(startAngle);
+                    const y2 = center.y + outerRadius * Math.sin(startAngle);
+                    const x3 = center.x + outerRadius * Math.cos(endAngle);
+                    const y3 = center.y + outerRadius * Math.sin(endAngle);
+                    const x4 = center.x + innerRadius * Math.cos(endAngle);
+                    const y4 = center.y + innerRadius * Math.sin(endAngle);
+                    
+                    path.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} L ${x4} ${y4} Z`);
+                    path.setAttribute("fill", magnetColor);
+                    path.setAttribute("stroke", "#333");
+                    path.setAttribute("stroke-width", "0.5");
+                    path.setAttribute("data-pole", i);
+                    
+                    // Add N/S label
+                    const labelX = center.x + (innerRadius + magnetThickness/2) * Math.cos(angle);
+                    const labelY = center.y + (innerRadius + magnetThickness/2) * Math.sin(angle);
+                    
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", labelX);
+                    text.setAttribute("y", labelY);
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("dominant-baseline", "middle");
+                    text.setAttribute("fill", "white");
+                    text.setAttribute("font-size", "10");
+                    text.setAttribute("font-weight", "bold");
+                    text.textContent = i % 2 === 0 ? "N" : "S";
+                    
+                    this.mainGroup.appendChild(path);
+                    this.mainGroup.appendChild(text);
+                }
+            }
+            
+            drawCircle(x, y, radius, fill, stroke = "none", strokeWidth = 0) {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", x);
+                circle.setAttribute("cy", y);
+                circle.setAttribute("r", radius);
+                circle.setAttribute("fill", fill);
+                
+                if (stroke !== "none") {
+                    circle.setAttribute("stroke", stroke);
+                    circle.setAttribute("stroke-width", strokeWidth);
+                }
+                
+                this.mainGroup.appendChild(circle);
+                return circle;
+            }
+            
+            drawLabels(center, design, scale) {
+                // Add title
+                const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                title.setAttribute("x", center.x);
+                title.setAttribute("y", 30);
+                title.setAttribute("text-anchor", "middle");
+                title.setAttribute("font-size", "16");
+                title.setAttribute("font-weight", "bold");
+                title.textContent = `${design.slotCount}S${design.poleCount}P Outrunner BLDC Motor`;
+                this.mainGroup.appendChild(title);
+                
+                // Add diameter label
+                const diameterLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                diameterLabel.setAttribute("x", center.x);
+                diameterLabel.setAttribute("y", 380);
+                diameterLabel.setAttribute("text-anchor", "middle");
+                diameterLabel.setAttribute("font-size", "14");
+                diameterLabel.textContent = `Diameter: ${Math.round(design.motorDiameter)}mm`;
+                this.mainGroup.appendChild(diameterLabel);
+                
+                // Add KV label
+                const kvLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                kvLabel.setAttribute("x", center.x);
+                kvLabel.setAttribute("y", 360);
+                kvLabel.setAttribute("text-anchor", "middle");
+                kvLabel.setAttribute("font-size", "14");
+                kvLabel.textContent = `Estimated KV: ${Math.round(design.estimatedKV)} RPM/V`;
+                this.mainGroup.appendChild(kvLabel);
+            }
+            
+            exportSVG() {
+                const svgData = new XMLSerializer().serializeToString(this.svg);
+                const blob = new Blob([svgData], {type: "image/svg+xml"});
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "bldc_motor_design.svg";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Application Controller
+        document.addEventListener('DOMContentLoaded', () => {
+            const calculator = new MotorCalculator();
+            const visualizer = new MotorVisualizer(document.getElementById('motor-svg'));
+            
+            const calculateBtn = document.getElementById('calculate-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const resultsContainer = document.getElementById('results-container');
+            
+            // Handle tab switching
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.getAttribute('data-tab');
+                    
+                    // Update active button
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Update active tab content
+                    tabContents.forEach(tab => tab.classList.remove('active'));
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                });
+            });
+            
+            // Calculate button click handler
+            calculateBtn.addEventListener('click', () => {
+                // Get input parameters
+                const params = {
+                    wireThickness: parseFloat(document.getElementById('wire-gauge').value),
+                    magnetWidth: parseFloat(document.getElementById('magnet-width').value),
+                    magnetHeight: parseFloat(document.getElementById('magnet-height').value),
+                    magnetThickness: parseFloat(document.getElementById('magnet-thickness').value),
+                    minDiameter: parseFloat(document.getElementById('min-diameter').value),
+                    maxDiameter: parseFloat(document.getElementById('max-diameter').value),
+                    targetKV: parseFloat(document.getElementById('motor-kv').value)
+                };
+                
+                // Calculate motor design
+                const motorDesign = calculator.calculateMotorDesign(params);
+                
+                // Display the visualization
+                visualizer.drawMotor(motorDesign);
+                
+                // Display results
+                displayResults(motorDesign);
+            });
+            
+            // Export button click handler
+            exportBtn.addEventListener('click', () => {
+                visualizer.exportSVG();
+            });
+            
+            function displayResults(design) {
+                const kvError = Math.abs(design.estimatedKV - document.getElementById('motor-kv').value) / document.getElementById('motor-kv').value * 100;
+                
+                let resultsHTML = `
+                    <div class="parameter-group">
+                        <h3>Motor Configuration</h3>
+                        <div class="parameter">
+                            <span class="parameter-name">Configuration:</span>
+                            <span class="parameter-value">${design.slotCount}S${design.poleCount}P</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Outer Diameter:</span>
+                            <span class="parameter-value">${design.motorDiameter.toFixed(1)} mm</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Stator Diameter:</span>
+                            <span class="parameter-value">${design.statorOuterDiameter.toFixed(1)} mm</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Airgap:</span>
+                            <span class="parameter-value">${design.airgap.toFixed(2)} mm</span>
+                        </div>
+                    </div>
+                    
+                    <div class="parameter-group">
+                        <h3>Winding Details</h3>
+                        <div class="parameter">
+                            <span class="parameter-name">Wire Diameter:</span>
+                            <span class="parameter-value">${design.wireDiameter.toFixed(2)} mm</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Turns per Coil:</span>
+                            <span class="parameter-value">${design.turnsPerCoil}</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Number of Coils:</span>
+                            <span class="parameter-value">${design.slotCount}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="parameter-group">
+                        <h3>Magnet Details</h3>
+                        <div class="parameter">
+                            <span class="parameter-name">Number of Magnets:</span>
+                            <span class="parameter-value">${design.poleCount}</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Magnet Width:</span>
+                            <span class="parameter-value">${design.magnetWidth.toFixed(1)} mm</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Magnet Height:</span>
+                            <span class="parameter-value">${design.magnetHeight.toFixed(1)} mm</span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Magnet Thickness:</span>
+                            <span class="parameter-value">${design.magnetThickness.toFixed(1)} mm</span>
+                        </div>
+                    </div>
+                    
+                    <div class="parameter-group">
+                        <h3>Performance Estimates</h3>
+                        <div class="parameter">
+                            <span class="parameter-name">Estimated KV:</span>
+                            <span class="parameter-value">${Math.round(design.estimatedKV)} RPM/V</span>
+                        </div>
+                `;
+                
+                if (kvError > 20) {
+                    resultsHTML += `
+                        <div class="alert">
+                            <strong>Note:</strong> The estimated KV differs significantly from your target. Consider adjusting the design parameters.
+                        </div>
+                    `;
+                }
+                
+                resultsHTML += `
+                        <div class="parameter">
+                            <span class="parameter-name">Efficiency:</span>
+                            <span class="parameter-value">${(design.efficiency * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="efficiency-meter">
+                            <div class="efficiency-value" style="width: ${design.efficiency * 100}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                resultsContainer.innerHTML = resultsHTML;
+            }
+        });
+    </script>
+</body>
+</html>

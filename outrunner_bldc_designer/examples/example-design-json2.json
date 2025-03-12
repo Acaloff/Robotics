@@ -1,0 +1,67 @@
+{
+  "designName": "9S10P 1200KV Racing Motor",
+  "description": "A high-KV outrunner BLDC motor for racing applications",
+  "dateCreated": "2025-03-12",
+  "version": "1.0.0",
+  "designParameters": {
+    "wireThickness": 0.5,
+    "wireGauge": "AWG 24",
+    "magnetWidth": 8.0,
+    "magnetHeight": 12.0,
+    "magnetThickness": 2.5,
+    "minDiameter": 22.0,
+    "maxDiameter": 28.0,
+    "targetKV": 1200
+  },
+  "calculatedResults": {
+    "motorDiameter": 25.0,
+    "rotorDiameter": 25.0,
+    "rotorInnerDiameter": 18.75,
+    "statorOuterDiameter": 17.5,
+    "statorInnerDiameter": 8.75,
+    "airgap": 0.625,
+    "slotCount": 9,
+    "poleCount": 10,
+    "windingType": "concentrated",
+    "lcm": 90,
+    "coggingFactor": 10,
+    "turnsPerCoil": 9,
+    "maxTurnsPerCoil": 22,
+    "wireDiameter": 0.5,
+    "magnetWidth": 5.2,
+    "magnetHeight": 12.0,
+    "magnetThickness": 2.5,
+    "magnetArcLength": 5.89,
+    "magnetGap": 0.69,
+    "estimatedKV": 1187.3,
+    "targetKV": 1200,
+    "kvDeviation": 1.06,
+    "efficiency": 0.86,
+    "phaseResistance": 0.078,
+    "estimatedWeight": 28.7
+  },
+  "performance": {
+    "maxContinuousPower": 280,
+    "peakPower": 480,
+    "maxContinuousTorque": 0.22,
+    "maxContinuousCurrent": 25,
+    "magneticFluxDensity": 1.2,
+    "operatingTemperature": {
+      "min": 10,
+      "max": 90
+    }
+  },
+  "materials": {
+    "magnets": "N45 Neodymium",
+    "wire": "Copper",
+    "insulation": "Class H (180°C)",
+    "statorMaterial": "Silicon Steel M19",
+    "rotorMaterial": "Aluminum 7075"
+  },
+  "applications": [
+    "Racing Drones",
+    "High-Speed RC Aircraft",
+    "Competition Models"
+  ],
+  "notes": "This high-KV design optimizes for speed and quick response at the expense of some torque. The 9S10P configuration provides a good balance between manufacturing simplicity and performance. The thinner wire allows more turns while maintaining a high KV rating."
+}
